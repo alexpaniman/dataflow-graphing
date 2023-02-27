@@ -1,11 +1,19 @@
-// #include "dataflow.h"
-// #include <iostream>
+#include "dataflow.h"
+
+using i32 = int_proxy;
+
+i32 factorial(i32 x) {
+    if (x == 0)
+        return 1;
+
+    return x * factorial(x - 1);
+}
 
 int main() {
-    int       x = 5, m = 4;
-    int       y = 5;
-    int       z = 5;
-    int       c = (((x + y) + z) + m);
+    i32 x = 1;
+    i32 y = 1;
+    i32 z = factorial(x + y);
 
-    // c.dump();
+    z.dump_history();
 }
+

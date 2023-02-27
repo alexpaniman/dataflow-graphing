@@ -1,0 +1,37 @@
+#!/bin/bash
+
+parent_path=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
+
+cd "$parent_path"
+
+(cd ../dataflow-points/build/; ninja) >/dev/null
+
+clang++ -I/home/alex/projects/c++-dataflow/dataflow-track/src -I/home/alex/projects/c++-dataflow/dataflow-track/lib/dataflow -I/home/alex/projects/c++-dataflow/dataflow-track/lib/axp -I/home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/graphviz -I/home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/trace -I/home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/hash-table -I/home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/safe-alloc -isystem /home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/linked-list -isystem /home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/ansi-colors -isystem /home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/macro-utils -isystem /home/alex/projects/c++-dataflow/dataflow-track/lib/graphviz/textlib -std=c++2b -fcxx-exceptions -c /home/alex/projects/c++-dataflow/dataflow-track/src/main.cpp -o tmp.o \
+-Xclang -load -Xclang "$(pwd)/../dataflow-points/build/csa-checker.so" -Xclang -add-plugin -Xclang print-vars -fno-elide-constructors -O0 > "points"
+
+(cd ../dataflow-track/build/; ninja) >/dev/null
+../dataflow-track/build/src/dataflow-test > "tracked"
+
+# clang++ --std=c++20 -O2 translate.cpp -o translate >/dev/null
+make
+./translate points tracked | sed 's/:/ /g' > "translated"
+
+echo "-------------  TRACKED   -------------"
+cat "tracked"
+
+echo "-------------   POINTS   -------------"
+cat "points"
+
+echo "------------- TRANSLATED -------------"
+cat "translated"
+
+echo "--------------------------------------"
+
+# (cd ../dataflow-visualize; clang++ --std=c++20 -lgumbo parse.cpp -o out)
+(cd ../dataflow-visualize; make)
+../dataflow-visualize/do "$(pwd)/../dataflow-track/src/main.cpp" translated
+
+mv main.cpp.html site/index.html
+
+# cp ../dataflow-visualize/anseki-leader-line . -r
+# rm translated tracked points tmp.o -f

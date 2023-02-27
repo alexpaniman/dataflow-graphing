@@ -1,5 +1,7 @@
 #include "gumbo.h"
 
+#include <cctype>
+#include <filesystem>
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
@@ -54,10 +56,11 @@ struct highlighted_text {
 
     std::map<std::set<std::string>, std::string> highlights_combined;
     // combines       ^~~~~~~~~~~ many highlights int one
-    std::set<std::string> selectors;
+    std::vector<std::string> selectors;
 };
 
-std::string join_to_string(const auto &strings, const char* sep = " ") {
+template <typename container_type>
+std::string join_to_string(const container_type &strings, const char* sep = " ") {
     std::string result;
 
     bool is_first = true;
@@ -98,7 +101,7 @@ std::string escape_in_html(char symbol) {
 
 unsigned get_or_add_class(highlighted_text &text, const std::set<std::string>& classes) {
     unsigned id = 0;
-    if (text.class_ids.contains(classes))
+    if (text.class_ids.count(classes))
         id = text.class_ids[classes];
     else {
         id = text.class_ids[classes] = text.class_ids.size() + 1;
@@ -255,21 +258,29 @@ std::string html_reconstruct(const highlighted_text &text, std::vector<std::stri
     }
 
     std::string script;
-    for (int i = 1; i < selectors.size(); ++ i) {
+    for (int i = 0; i < selectors.size() - 1; i += 2) {
         script += "        line = new LeaderLine(\n";
 
         script += "            document.getElementsByClassName('";
-        script += selectors[i - 1];
+        script += selectors[i];
         script += "')[0],\n";
 
         script += "            document.getElementsByClassName('";
-        script += selectors[i];
-        script += "')[0]\n";
+        script += selectors[i + 1];
+        script += "')[0], "                                           "{\n";
 
-        script += "        );\n\n";
+     // Expensive, but looks fancy:
+     // script += "              dash: { animation: true }"           ",\n";
 
-        script += "        line.size = 2;\n";
-     // script += "        line.path = 'straight';\n";
+        script += "              dropShadow: true"                    ",\n";
+        script += "              startPlug: 'square'"                 ",\n";
+        script += "              endPlug: 'arrow2'"                   ",\n";
+        script += "              startSocketGravity: 900"             ",\n";
+        script += "              size: 2.2"                           ",\n";
+        script += "              color: '" + select_random_color() + "',\n";
+        script += "              path: 'arc'"                         ",\n";
+        script += "        });"                                      "\n\n";
+
     }
 
     std::stringstream ss;
@@ -336,7 +347,7 @@ std::string new_selector(highlighted_text &text) {
 
     std::string selector_name = new_class_name_builder.str();
 
-    text.selectors.insert(selector_name);
+    text.selectors.push_back(selector_name);
 
     return selector_name;
 }
@@ -361,14 +372,31 @@ auto select(highlighted_text &text, const std::vector<location>& positions)
     return selections;
 }
 
+
+bool is_blank(const std::string str) {
+    for(char symbol: str)
+        if (!std::isblank(symbol))
+            return false;
+
+    return true;
+}
+
 int main(int argc, char *argv[]) {
     std::srand(0);
 
-    const char *filename = argv[1];
-    highlighted_text text = extract_highlighted_text(filename);
+    const char *source_file = argv[1];
+    const char *scopes_file = argv[2];
+
+    std::string scope_list = read_whole_file(scopes_file);
+    if (is_blank(scope_list)) {
+        std::cerr << "WARNING: no regions where tracked!";
+        return EXIT_SUCCESS;
+    }
+
+    highlighted_text text = extract_highlighted_text(source_file);
 
     std::vector<std::string> selections = 
-        select(text, parse_target_locations(read_stdin()));
+        select(text, parse_target_locations(scope_list));
 
     std::cout << html_reconstruct(text, selections);
 }

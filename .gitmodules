@@ -1,0 +1,6 @@
+[submodule "dataflow-track/lib/graphviz"]
+	path = dataflow-track/lib/graphviz
+	url = git@github.com:alexpaniman/c-graphviz.git
+[submodule "dataflow-track/lib/axp"]
+	path = dataflow-track/lib/axp
+	url = git@github.com:alexpaniman/axp.git

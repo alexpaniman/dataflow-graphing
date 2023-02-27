@@ -2,6 +2,8 @@
 
 parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
-$parent_path/generate-html "$1" "$1.tmp.html"
-cat "$2" | $parent_path/out "$1.tmp.html" > "$(basename "$1.html")"
-# rm "$1.tmp.html"
+temp_html="$(realpath "$(basename "$1.tmp.html")")"
+$parent_path/htmlize-cpp/htmlize-cpp "$1" "$temp_html"
+$parent_path/out "$temp_html" "$2" > "$(basename "$1.html")"
+
+rm "$temp_html"
