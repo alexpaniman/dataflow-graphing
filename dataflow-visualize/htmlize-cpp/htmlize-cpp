@@ -1,6 +1,6 @@
 #!/bin/sh
 
-emacsclient -e "(with-current-buffer (find-file-noselect \"$1\")
-                    (font-lock-fontify-buffer)
-                    (with-current-buffer (htmlize-buffer)
-	                (write-file \"$2\")))" -a '' >/dev/null
+parent_path=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
+cd "$parent_path"
+
+emacs --batch --load generate-html-from-cpp-source.el "$1" "$2"
