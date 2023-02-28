@@ -4,6 +4,6 @@ parent_path=$( cd "$(dirname "${BASH_SOURCE[0]}")" ; pwd -P )
 
 temp_html="$(realpath "$(basename "$1.tmp.html")")"
 $parent_path/htmlize-cpp/htmlize-cpp "$1" "$temp_html"
-$parent_path/out "$temp_html" "$2" > "$(basename "$1.html")"
+$parent_path/build/select "$temp_html" "$2" > "$(basename "$1.html")"
 
 rm "$temp_html"
