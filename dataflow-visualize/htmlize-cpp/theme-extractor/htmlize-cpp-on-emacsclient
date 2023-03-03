@@ -1,0 +1,8 @@
+#!/bin/sh
+
+emacsclient -e "(find-file \"$2\")"                   \
+	    -e '(lsp-mode -1)'                        \
+	    -e '(flycheck-mode -1)'                   \
+	    -e "(counsel-load-theme-action \"$1\")"   \
+	    -e "(with-current-buffer (htmlize-buffer)
+	             (write-file \"$3\"))"

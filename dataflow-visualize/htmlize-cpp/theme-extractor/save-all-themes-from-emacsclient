@@ -1,0 +1,18 @@
+#!/bin/sh
+
+parent_path=$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd -P)
+cd "$parent_path"
+
+theme_folder="emacs-themes"
+
+mkdir -p "$theme_folder"
+
+themes="$(./available-themes-on-emacsclient)"
+for theme in $themes; do
+    tmp_file="/tmp/cpp-with-all-colors-themed.cpp.html"
+
+    ./htmlize-cpp-on-emacsclient "$theme" "cpp-with-all-colors.cpp" "$tmp_file"
+    ./generate-emacs-theme "$tmp_file" > "$theme_folder/$theme.el"
+
+    rm "$tmp_file"
+done
